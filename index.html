@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RevFirma — Reserve Your Local Ad Space</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300;0,14..32,400;0,14..32,500;1,14..32,300&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/styles.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
+  <style>
+
+    /* ─────────────────────────────────────────
+       LAYOUT ONLY — local-vs.html
+       Typography · buttons · colors  styles.css
+    ───────────────────────────────────────── */
+
+    /* ── Body background ── */
+    body {
+      background-image: url('assets/landing-page/bg-lightmode.png');
+      background-attachment: fixed;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+    }
+
+    /* ── Wrapper: used for header, footer, FAQ ── */
+    .wrap {
+      max-width: 1600px;
+      margin: 0 auto;
+      padding: 0 45px;
+    }
+
+    /* ── Header ── */
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: #ffffff;
+      border-bottom: 1px solid var(--border);
+    }
+    .site-nav {
+      display: flex;
+      align-items: center;
+      padding: 20px 0;
+    }
+    .site-nav__logo {
+      height: 36px;
+      width: auto;
+      display: block;
+    }
+    .site-nav__cta {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 24px;
+    }
+
+    /* ════════════════════════════════════════
+       PANEL — 50/50 full-bleed split
+
+       .panel              flex row, stretches to content height
+       .panel__img         left or right half — background covers its half of the browser
+       .panel__body        opposite half — houses the content
+       .panel__content     inner padding aligns text to the 1600px grid
+    ════════════════════════════════════════ */
+
+    .panel {
+      display: flex;
+      align-items: stretch;
+    }
+
+    /* ── Image half ── */
+    .panel__img {
+      flex: 0 0 50%;
+      background: #f9f9f9 center / cover no-repeat;
+      min-height: 600px;
+      position: relative;
+    }
+
+    /* Overlay — sits above background image, full height */
+    .panel__img .overlay {
+      position: absolute;
+      top: 0;
+      height: 100%;
+      width: auto;
+      z-index: 1;
+      display: block;
+    }
+    .panel__img .overlay--left  { left: 0; }
+    .panel__img .overlay--right { right: 0; }
+
+    /* Bottom overlay — hugs the bottom, spans full width */
+    .panel__img .overlay--bottom {
+      top: auto;
+      bottom: 0;
+      left: 0;
+      height: auto;
+      width: 100%;
+    }
+
+
+    /* Desktop: hide mobile-only overlays */
+    .panel__img .overlay--mobile-only  { display: none; }
+
+    @media (max-width: 900px) {
+      .panel__img .overlay--desktop-only { display: none; }
+      .panel__img .overlay--mobile-only  { display: block; }
+    }
+
+    /* ── Content half ── */
+    .panel__body {
+      flex: 0 0 50%;
+      display: flex;
+      align-items: center;
+    }
+
+    .panel__body--alt {
+      background: #F9F9F9;
+    }
+
+    /* Inner content block — full width of its column */
+    .panel__content {
+      width: 100%;
+      padding-top: 120px;
+      padding-bottom: 120px;
+    }
+
+    /* Content spacing */
+    .panel__content > * + * { margin-top: 24px; }
+    .panel__content .btn-row { margin-top: 36px; }
+
+    /*
+      Padding formula — aligns text to the 1600px grid edge.
+
+      When the viewport ≤ 1600px:
+        The grid fills the viewport with 45px side padding.
+        Inner edge (toward center): 45px
+        Outer edge (toward browser edge): 45px
+
+      When the viewport > 1600px:
+        The 1600px container is centered.
+        The outer padding grows: (100vw − 1600px) / 2 + 45px
+        The inner padding stays 45px (aligns to container's midpoint).
+
+      Image LEFT  content RIGHT:
+        padding-left  = 45px            (inner, toward center)
+        padding-right = outer formula   (outer, toward browser right edge)
+
+      Image RIGHT  content LEFT:
+        padding-left  = outer formula   (outer, toward browser left edge)
+        padding-right = 45px            (inner, toward center)
+    */
+
+    .panel--img-left .panel__content {
+      padding-left:  45px;
+      padding-right: max(45px, calc((100vw - 1600px) / 2 + 45px));
+    }
+
+    .panel--img-right .panel__content {
+      padding-left:  max(45px, calc((100vw - 1600px) / 2 + 45px));
+      padding-right: 45px;
+    }
+
+    /* ── Hexagons icon ── */
+    img[src*="hexagons-eyebrow"] {
+      width: 40px !important;
+      height: auto !important;
+    }
+
+    /* ── Eyebrow row ── */
+    .eyebrow-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .eyebrow-row img {
+      flex-shrink: 0;
+    }
+
+    /* ── Button row ── */
+    .btn-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    /* ════════════════════════════════════════
+       FAQ SECTION
+    ════════════════════════════════════════ */
+
+    .section       { padding: 120px 0; }
+    .section--alt  { background: #F9F9F9; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 90px;
+    }
+
+    .col-6-mid  { grid-column: 4 / span 6; }
+    .col-8-mid  { grid-column: 3 / span 8; }
+    .col-3-bio  { grid-column: 3 / span 3; }
+    .col-5-bio  { grid-column: 6 / span 5; }
+
+    .faq-list > * + * { margin-top: 0; }
+
+    details {
+      border-top: 1px solid var(--border);
+    }
+    details:last-child {
+      border-bottom: 1px solid var(--border);
+    }
+    details > summary {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 32px;
+      padding: 24px 0;
+      cursor: pointer;
+      list-style: none;
+    }
+    details > summary::-webkit-details-marker { display: none; }
+    details > summary::after {
+      content: '+';
+      font-family: var(--font-mon);
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--accent);
+      flex-shrink: 0;
+    }
+    details[open] > summary::after { content: '−'; }
+
+    .faq-answer { padding: 0 0 24px; }
+
+    .faq-header { margin-bottom: 48px; }
+
+    /* ── Footer ── */
+    .site-footer {
+      background: #ffffff;
+      border-top: 1px solid var(--border);
+      padding: 52px 0;
+    }
+    .site-footer--alt {
+      background: #F9F9F9;
+    }
+    .site-footer__inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
+    .site-footer__logo {
+      height: 32px;
+      width: auto;
+      display: block;
+    }
+    .site-footer__left {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      flex: 1;
+    }
+    .site-footer__center {
+      flex: 0 0 auto;
+    }
+    .site-footer__right {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 24px;
+      flex: 1;
+    }
+
+    /* ════════════════════════════════════════
+       RESPONSIVE
+    ════════════════════════════════════════ */
+
+    @media (max-width: 900px) {
+
+      /* Stack panels vertically */
+      .panel {
+        flex-direction: column;
+      }
+
+      /* Image becomes a 4:3 block on top */
+      .panel__img {
+        flex: none;
+        width: 100%;
+        min-height: unset;
+        aspect-ratio: 4 / 3;
+      }
+
+      /* img-right panels: image moves above content on mobile */
+      .panel--img-right .panel__img {
+        order: -1;
+      }
+
+      /* Content column goes full width */
+      .panel__body {
+        flex: none;
+        width: 100%;
+      }
+
+      /* Override desktop padding formulas */
+      .panel--img-left  .panel__content,
+      .panel--img-right .panel__content {
+        padding: 56px 32px;
+      }
+
+      /* FAQ grid collapses */
+      .section  { padding: 80px 0; }
+      .wrap     { padding: 0 32px; }
+      .grid     { grid-template-columns: 1fr; gap: 0; }
+      .col-6-mid, .col-8-mid, .col-3-bio, .col-5-bio { grid-column: span 1; }
+      .site-nav__phone     { display: none; }
+      .map-panel           { padding: 30px 30px 0; aspect-ratio: unset; min-height: unset; }
+      #map                 { border-radius: 30px; overflow: hidden; height: 320px !important; }
+      .site-footer__inner  { align-items: flex-start; }
+      .site-footer__right  { flex-direction: column; align-items: flex-start; }
+
+    }
+
+    @media (max-width: 600px) {
+
+      .panel--img-left  .panel__content,
+      .panel--img-right .panel__content {
+        padding: 48px 20px;
+      }
+
+      .section { padding: 56px 0; }
+      .wrap    { padding: 0 20px; }
+      .btn-row { flex-direction: column; align-items: flex-start; }
+
+    }
+
+  </style>
+  <script>
+    var _mtm = window._mtm = window._mtm || [];
+    _mtm.push({'mtm.startTime': (new Date().getTime()), 'event': 'mtm.Start'});
+    (function() {
+      var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
+      g.async=true; g.src='https://cdn.matomo.cloud/aisalesstaff.matomo.cloud/container_NACLvj59.js'; s.parentNode.insertBefore(g,s);
+    })();
+  </script>
+</head>
+<body>
+
+  <!-- ── Header ── -->
+  <header class="site-header">
+    <div class="wrap">
+      <nav class="site-nav">
+        <img src="assets/logo-lightmode.svg" alt="RevFirma" class="site-nav__logo">
+        <div class="site-nav__cta">
+          <span class="t-eyebrow site-nav__phone">936-661-3027</span>
+          <a href="https://calendly.com/james-revfirma/30min" target="_blank" rel="noopener" class="btn btn-secondary btn-md">Book My Call </a>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+
+  <!-- ── Hero: content left · image right ── -->
+  <div class="panel panel--img-right">
+
+    <div class="panel__body">
+      <div class="panel__content">
+        <div class="eyebrow-row">
+          <img src="assets/hexagons-eyebrow.svg" alt="">
+          <span class="t-eyebrow"> Spots Are Limited</span>
+        </div>
+        <h1 class="t-h1"><span class="m">Reserve your</span> Eufaula business's <span class="m">ad space</span> before your competitor does.</h1>
+        <p class="t-lead">Our patent-pending technology secures targeted local ad space — launching now in the Lake Eufaula area.</p>
+        <div class="btn-row">
+          <a href="https://calendly.com/james-revfirma/30min" target="_blank" rel="noopener" class="btn btn-primary">BOOK MY CALL </a>
+          <span class="t-eyebrow">936-661-3027</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel__img" style="background-image: url('assets/landing-page/boating.jpg');">
+      <img src="assets/landing-page/overlay-left-white.png" class="overlay overlay--left overlay--desktop-only" alt="">
+      <img src="assets/landing-page/overlay-bottom-white.png" class="overlay overlay--bottom overlay--mobile-only" alt="">
+    </div>
+
+  </div>
+
+
+  <!-- ── Panel A: Map — image left · content right ── -->
+  <div class="panel panel--img-left">
+
+    <div class="panel__img map-panel" style="z-index: 0;">
+      <div id="map" style="height: 600px; width: 100%;"></div>
+    </div>
+
+    <div class="panel__body panel__body--alt">
+      <div class="panel__content">
+        <div class="eyebrow-row">
+          <img src="assets/hexagons-eyebrow.svg" alt="">
+        </div>
+        <h3 class="t-h3">Eufaula Marina — the highest-traffic zone on the lake.</h3>
+        <p class="t-body">Up to 5,000 people enter this zone daily — boaters, visitors, and locals fueling up, docking, and spending. That’s up to 75,000 targeted impressions delivered every single day, 15 times per person.</p>
+        <p class="t-body">8 of 10 license slots are still open. Once they’re gone, they’re gone — the zone is category-exclusive and we never add more slots.</p>
+        <div style="display: flex; gap: 16px; flex-wrap: wrap; margin-top: 8px;">
+          <div style="flex: 1; min-width: 120px; background: #ffffff; border: 1px solid var(--border); border-radius: 8px; padding: 16px 20px;">
+            <div class="t-eyebrow" style="margin-bottom: 6px;">People / Day</div>
+            <div class="t-h3">1K–5K</div>
+          </div>
+          <div style="flex: 1; min-width: 120px; background: #ffffff; border: 1px solid var(--border); border-radius: 8px; padding: 16px 20px;">
+            <div class="t-eyebrow" style="margin-bottom: 6px;">Impressions / Day</div>
+            <div class="t-h3">15K–75K</div>
+          </div>
+          <div style="flex: 1; min-width: 120px; background: #ffffff; border: 1px solid var(--border); border-radius: 8px; padding: 16px 20px;">
+            <div class="t-eyebrow" style="margin-bottom: 6px;">Impressions / Month</div>
+            <div class="t-h3">450K–2M+</div>
+          </div>
+        </div>
+        <div class="btn-row">
+          <a href="https://calendly.com/james-revfirma/30min" target="_blank" rel="noopener" class="btn btn-ghost btn-md">BOOK MY CALL </a>
+          <span class="t-eyebrow">936-661-3027</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+
+  <!-- ── Panel B: Tech startup — image right · content left ── -->
+  <div class="panel panel--img-right">
+
+    <div class="panel__body">
+      <div class="panel__content">
+        <div class="eyebrow-row">
+          <img src="assets/hexagons-eyebrow.svg" alt="">
+        </div>
+        <h3 class="t-h3">Eufaula area tech startup</h3>
+        <p class="t-body">We're a locally owned and operated Eufaula, Oklahoma area tech start-up. We help local businesses get seen online and convert traffic into paying customers.</p>
+        <p class="t-body">Our proprietary, patent-pending technology allows us to secure ad space for specific geographic parameters — and we're launching right here in the Lake Eufaula area.</p>
+        <div class="btn-row">
+          <a href="https://calendly.com/james-revfirma/30min" target="_blank" rel="noopener" class="btn btn-ghost btn-md">BOOK MY CALL </a>
+          <span class="t-eyebrow">936-661-3027</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel__img" style="background-image: url('assets/landing-page/food.jpg');">
+      <img src="assets/landing-page/overlay-left-white.png" class="overlay overlay--left overlay--desktop-only" alt="">
+      <img src="assets/landing-page/overlay-bottom-white.png" class="overlay overlay--bottom overlay--mobile-only" alt="">
+    </div>
+
+  </div>
+
+
+  <!-- ── Panel C: Spots limited — image left · content right ── -->
+  <div class="panel panel--img-left">
+
+    <div class="panel__img" style="background-image: url('assets/landing-page/lodging.jpg');">
+      <img src="assets/landing-page/overlay-right-gray.png" class="overlay overlay--right overlay--desktop-only" alt="">
+      <img src="assets/landing-page/overlay-bottom-gray.png" class="overlay overlay--bottom overlay--mobile-only" alt="">
+    </div>
+
+    <div class="panel__body panel__body--alt">
+      <div class="panel__content">
+        <div class="eyebrow-row">
+          <img src="assets/hexagons-eyebrow.svg" alt="">
+        </div>
+        <h3 class="t-h3">Spots are limited</h3>
+        <p class="t-body">For the Eufaula lakeshore area, we are only offering 10 spots, ever. Once we're sold out, we'll dedicate our remaining focus and energy for the Eufaula lakeshore area to serving our clients, generating leads, and converting them into buyers.</p>
+        <p class="t-body">Reserve your spot before your competitor does. Call now or book your no obligation call to learn more.</p>
+        <div class="btn-row">
+          <a href="https://calendly.com/james-revfirma/30min" target="_blank" rel="noopener" class="btn btn-ghost btn-md">BOOK MY CALL </a>
+          <span class="t-eyebrow">936-661-3027</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+
+  <!-- ── Bio ── -->
+  <section class="section">
+    <div class="wrap">
+      <div class="grid">
+        <div class="col-3-bio">
+          <img src="assets/landing-page/james-avatar.png" alt="James" style="display: block; width: 100%; max-width: 300px; height: auto;">
+        </div>
+        <div class="col-5-bio">
+          <img src="assets/hexagons-eyebrow.svg" alt="" style="display: block; margin-bottom: 24px;">
+          <h3 class="t-h3" style="margin-bottom: 24px;">Locally owned and operated</h3>
+          <p class="t-body">I’m James, and I live right here on Lake Eufaula. I built RevFirma because I understand what it means to run a business in a seasonal town — when your audience shows up, everything is on the line.
+          </p>
+          <p class="t-body">Eufaula has built something special. The lake, the welcome, the community — that draws people here. My goal is simple: when those people are in the area, I want their dollars going to local businesses, not to national chains with bigger ad budgets.
+          </p>
+          <p class="t-body">This isn’t a Silicon Valley startup. It’s a local one. I’m your neighbor, and I’m here year-round.</p>
+          <div style="margin-top: 32px; display: flex; flex-direction: column; gap: 8px;">
+            <img src="assets/landing-page/signature.svg" alt="James signature" style="display: block; height: auto; width: 100%; max-width: 70px;">
+            <span class="t-eyebrow">936-661-3027</span>
+            <a href="mailto:James@RevFirma.com" class="t-eyebrow">James@RevFirma.com</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ── FAQ (gray) ── -->
+  <section class="section section--alt">
+    <div class="wrap">
+      <div class="grid">
+        <div class="col-6-mid">
+
+          <div class="faq-header">
+            <h3 class="t-h3">Frequently asked questions</h3>
+          </div>
+
+          <div class="faq-list">
+
+            <details>
+              <summary class="t-h6">How much does it cost?</summary>
+              <div class="faq-answer">
+                <p class="t-body">Pricing is based on your zone and category. We keep it simple — a flat monthly license, no setup fees, no long-term contracts. Book a call and I’ll walk you through exactly what it costs for your business.</p>
+              </div>
+            </details>
+
+            <details>
+              <summary class="t-h6">What kinds of businesses is this for?</summary>
+              <div class="faq-answer">
+                <p class="t-body">Any local business that depends on foot traffic or seasonal visitors — marinas, restaurants, lodging, insurance agencies, banks, auto dealers, retail shops. If people come to the lake and your business is in the area, this is for you.</p>
+              </div>
+            </details>
+
+            <details>
+              <summary class="t-h6">Why can’t I just run my own Facebook ads?</summary>
+              <div class="faq-answer">
+                <p class="t-body">You can — and you should. But running your own ads means competing in an open auction against every other business targeting the same people. Shield is different. We buy the zone at volume so your brand dominates every impression inside it. Competitors don’t get a seat at the table. It’s not a campaign — it’s ownership.</p>
+              </div>
+            </details>
+
+            <details>
+              <summary class="t-h6">How do I know it’s working?</summary>
+              <div class="faq-answer">
+                <p class="t-body">You’ll get a live dashboard showing impressions delivered, reach, and frequency inside your zone — updated daily. No guessing. You’ll see exactly how many people entered the zone and how many times your brand was in front of them.</p>
+              </div>
+            </details>
+
+            <details>
+              <summary class="t-h6">What does “only 10 spots” mean — am I locked out if I wait?</summary>
+              <div class="faq-answer">
+                <p class="t-body">Yes. Each zone has a fixed number of category-exclusive license slots — once a slot is taken, that category is closed for the life of the zone. If you’re a restaurant and a competitor claims the restaurant slot first, you’re out. There’s no waitlist. First mover wins.</p>
+              </div>
+            </details>
+
+            <details>
+              <summary class="t-h6">Are there long-term contracts?</summary>
+              <div class="faq-answer">
+                <p class="t-body">No. RevFirma is month-to-month. You can cancel anytime. Most clients see clear results within the first 60 days — but we’d rather earn your business every month than lock you in.</p>
+              </div>
+            </details>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ── Footer ── -->
+  <footer class="site-footer site-footer--alt">
+    <div class="wrap">
+      <div class="site-footer__inner">
+        <div class="site-footer__left">
+          <a href="https://aisalesstaff.com/#privacy" target="_blank" rel="noopener" class="t-legal">Privacy Policy</a>
+          <a href="mailto:James@RevFirma.com" class="t-legal">James@RevFirma.com</a>
+          <span class="t-legal">© 2026 RevFirma. AI Sales, Inc.</span>
+        </div>
+<div class="site-footer__right">
+          <span class="t-eyebrow">936-661-3027</span>
+          <a href="https://calendly.com/james-revfirma/30min" target="_blank" rel="noopener" class="btn btn-secondary btn-md">BOOK A CALL →</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+  <script>
+    // ── Map config ─────────────────────────────
+    var CENTER     = [35.2896, -95.5888]; // Eufaula Marina, OK
+    var ZOOM       = 10;
+    var RADIUS_M   = 1609;                    // 1 mile radius
+
+    // ── Init map ───────────────────────────────
+    var map = L.map('map', {
+      center: CENTER,
+      zoom:   ZOOM,
+      scrollWheelZoom: false   // prevents accidental scroll-hijack on the page
+    });
+
+    // ── OpenStreetMap tiles (free, no API key) ──
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+      maxZoom: 19,
+      attribution: 'Tiles &copy; Esri'
+    }).addTo(map);
+
+    // ── Perimeter circle ───────────────────────
+    var perimeterCircle = L.circle(CENTER, {
+      radius:      RADIUS_M,
+      color:       '#26ACE8',
+      weight:      2,
+      fillColor:   '#26ACE8',
+      fillOpacity: 0.12
+    }).addTo(map);
+
+    // ── Fit map view to the circle bounds ──────
+    map.fitBounds(perimeterCircle.getBounds());
+
+    // ── Force recalculate after layout settles ──
+    setTimeout(function() {
+      map.invalidateSize();
+      map.fitBounds(perimeterCircle.getBounds());
+    }, 200);
+  </script>
+
+</body>
+</html>
